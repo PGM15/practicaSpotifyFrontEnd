@@ -1,21 +1,32 @@
-export default function HomePage() {
-    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-    const redirect = process.env.NEXT_PUBLIC_REDIRECT_URI;
+'use client';
 
-    const scopes =
-        "user-read-private user-read-email playlist-read-private user-top-read";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated, getSpotifyAuthUrl } from '@/lib/auth';
 
-    const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
-        redirect
-    )}&scope=${encodeURIComponent(scopes)}`;
+export default function Home() {
+  const router = useRouter();
 
-    return (
-        <main style={{ display: "flex", justifyContent: "center", marginTop: "200px" }}>
-            <a href={authUrl}>
-                <button style={{ padding: "20px", fontSize: "20px" }}>
-                    Login con Spotify
-                </button>
-            </a>
-        </main>
-    );
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  const handleLogin = () => {
+    window.location.href = getSpotifyAuthUrl();
+  };
+
+  return (
+    <main className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+      <h1 className="text-4xl font-bold mb-6">🎵 Spotify Taste Mixer</h1>
+
+      <button
+        onClick={handleLogin}
+        className="px-6 py-3 bg-green-500 hover:bg-green-600 transition rounded-lg text-lg font-semibold"
+      >
+        Login with Spotify
+      </button>
+    </main>
+  );
 }

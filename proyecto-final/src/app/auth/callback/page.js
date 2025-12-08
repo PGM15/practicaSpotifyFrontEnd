@@ -1,39 +1,61 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { saveTokens } from "../../../lib/auth";
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function CallbackPage() {
-    const router = useRouter();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get("code");
+  useEffect(() => {
+    const run = async () => {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      const savedState = localStorage.getItem('spotify_auth_state');
 
-        if (!code) return;
+      if (!state || state !== savedState) {
+        setError('Error de validación de seguridad (CSRF). Intenta iniciar sesión de nuevo.');
+        localStorage.removeItem('spotify_auth_state');
+        return;
+      }
 
-        async function exchangeCode() {
-            console.log("CALLBACK CODE:", code);
+      localStorage.removeItem('spotify_auth_state');
 
-            const res = await fetch("/api/spotify-token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code })
-            });
+      const res = await fetch('/api/spotify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
 
-            const data = await res.json();
+      const data = await res.json();
 
-            if (data.access_token) {
-                saveTokens(data.access_token, data.refresh_token);
-                router.push("/dashboard");
-            } else {
-                console.error("❌ Token error:", data);
-            }
-        }
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
 
-        exchangeCode();
-    }, []);
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('expires_in', data.expires_in);
 
-    return <p>Procesando login...</p>;
+      router.push('/dashboard');
+    };
+
+    run();
+  }, [router, searchParams]);
+
+  if (error) {
+    return (
+      <main className="min-h-screen flex items-center justify-center text-red-400">
+        <p>{error}</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen flex items-center justify-center text-white">
+      <p>Procesando autenticación...</p>
+    </main>
+  );
 }

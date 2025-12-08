@@ -1,39 +1,74 @@
-export async function getSpotifyAccessToken(code) {
-    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI;
-
-    const body = new URLSearchParams({
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: redirectUri
-    });
-
-    const res = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: {
-            "Authorization": basicAuthHeader(),
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body
-    });
-
-    const data = await res.json();
-    return data;
+export function getAccessToken() {
+  return localStorage.getItem("access_token");
 }
 
-export async function refreshAccessToken(refreshToken) {
-    const body = new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken
-    });
+export async function searchArtists(query) {
+  const token = getAccessToken();
 
-    const res = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: {
-            Authorization: basicAuthHeader(),
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body
-    });
+  const res = await fetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=10`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
 
-    return res.json();
+  return res.json();
+}
+
+export async function generatePlaylist(preferences) {
+  const { artists, genres, decades, popularity } = preferences;
+  const token = getAccessToken();
+  let allTracks = [];
+
+  // 1. Top tracks por artista
+  for (const artist of artists) {
+    const tracks = await fetch(
+      `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+    const data = await tracks.json();
+    allTracks.push(...data.tracks);
+  }
+
+  // 2. Buscar por género
+  for (const genre of genres) {
+    const results = await fetch(
+      `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+    const data = await results.json();
+    allTracks.push(...data.tracks.items);
+  }
+
+  // 3. Filtrar por década
+  if (decades.length > 0) {
+    allTracks = allTracks.filter(track => {
+      const year = new Date(track.album.release_date).getFullYear();
+      return decades.some(decade => {
+        const decadeStart = parseInt(decade);
+        return year >= decadeStart && year < decadeStart + 10;
+      });
+    });
+  }
+
+  // 4. Filtrar por popularidad
+  if (popularity) {
+    const [min, max] = popularity;
+    allTracks = allTracks.filter(
+      track => track.popularity >= min && track.popularity <= max
+    );
+  }
+
+  // 5. Quitar duplicados y limitar
+  const uniqueTracks = Array.from(
+    new Map(allTracks.map(track => [track.id, track])).values()
+  ).slice(0, 30);
+
+  return uniqueTracks;
 }
