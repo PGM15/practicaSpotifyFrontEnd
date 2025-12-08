@@ -17,6 +17,36 @@ export async function searchArtists(query) {
   return res.json();
 }
 
+export async function searchTracks(query) {
+  const token = getAccessToken();
+
+  const res = await fetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=12`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.json(); // devuelve { tracks: { items: [...] } }
+}
+
+export async function searchTracksByGenre(genre) {
+  const token = getAccessToken();
+
+  const res = await fetch(
+    `https://api.spotify.com/v1/search?q=genre:${encodeURIComponent(genre)}&type=track&limit=20`,
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  );
+
+  return res.json(); // { tracks: { items: [...] } }
+}
+
+
+
 export async function generatePlaylist(preferences) {
   const { artists, genres, decades, popularity } = preferences;
   const token = getAccessToken();
