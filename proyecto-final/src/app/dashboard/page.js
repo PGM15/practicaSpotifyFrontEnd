@@ -11,30 +11,52 @@ import DecadeWidget from '@/components/widgets/DecadeWidget.jsx';
 import MoodWidget from '@/components/widgets/MoodWidget.jsx';
 import PopularityWidget from '@/components/widgets/PopularityWidget.jsx';
 
-
-
+import PlaylistDisplay from '@/components/widgets/PlaylistDisplay.jsx';
+import { generatePlaylist } from '@/lib/spotify';
 
 export default function Dashboard() {
   const router = useRouter();
 
-  // ESTADOS PARA CADA WIDGET
-  const [selectedArtists, setSelectedArtists] = useState([]);
-  const [selectedTracks, setSelectedTracks] = useState([]);
-  const [selectedGenres, setSelectedGenres] = useState([]);
-  const [selectedDecades, setSelectedDecades] = useState([]);
-  const [moodSettings, setMoodSettings] = useState(null);
-  const [popularityRange, setPopularityRange] = useState([0, 100]);
+  // 🔥 ESTADO ÚNICO PARA TODOS LOS WIDGETS
+  const [preferences, setPreferences] = useState({
+    artists: [],
+    tracks: [],
+    genres: [],
+    decades: [],
+    mood: null,
+    popularity: [0, 100],
+  });
 
+  // 🔥 ESTADO PARA LA PLAYLIST
+  const [playlist, setPlaylist] = useState([]);
+  const [loadingPlaylist, setLoadingPlaylist] = useState(false);
 
+  // 🔥 HANDLERS PARA CADA WIDGET
+  const handleArtists = items => setPreferences(prev => ({ ...prev, artists: items }));
+  const handleTracks = items => setPreferences(prev => ({ ...prev, tracks: items }));
+  const handleGenres = items => setPreferences(prev => ({ ...prev, genres: items }));
+  const handleDecades = items => setPreferences(prev => ({ ...prev, decades: items }));
+  const handleMood = items => setPreferences(prev => ({ ...prev, mood: items }));
+  const handlePopularity = items => setPreferences(prev => ({ ...prev, popularity: items }));
 
-
-
-  // Proteger ruta de dashboard
+  // 🔐 Proteger ruta dashboard
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/');
-    }
+    if (!isAuthenticated()) router.push('/');
   }, [router]);
+
+  // 🎵 GENERAR PLAYLIST
+  const handleGeneratePlaylist = async () => {
+    setLoadingPlaylist(true);
+
+    try {
+      const tracks = await generatePlaylist(preferences);
+      setPlaylist(tracks);
+    } catch (error) {
+      console.error("Error generando playlist:", error);
+    }
+
+    setLoadingPlaylist(false);
+  };
 
   return (
     <main className="min-h-screen bg-gray-900 text-white p-10">
@@ -56,38 +78,54 @@ export default function Dashboard() {
       {/* CONTENIDO PRINCIPAL */}
       <div className="flex flex-col gap-10 max-w-3xl mx-auto">
 
-        {/* WIDGET: ARTISTAS */}
         <ArtistWidget
-          selectedItems={selectedArtists}
-          onSelect={setSelectedArtists}
+          selectedItems={preferences.artists}
+          onSelect={handleArtists}
         />
 
-        {/* WIDGET: TRACKS */}
         <TrackWidget
-        selectedItems={selectedTracks}
-        onSelect={setSelectedTracks}
-        genre={selectedGenres[0]}   // el primer género seleccionado
+          selectedItems={preferences.tracks}
+          onSelect={handleTracks}
+          genre={preferences.genres[0]}
         />
 
-
-        {/* WIDGET: GÉNEROS */}
         <GenreWidget
-          selectedItems={selectedGenres}
-          onSelect={setSelectedGenres}
+          selectedItems={preferences.genres}
+          onSelect={handleGenres}
         />
+
         <DecadeWidget
-            selectedItems={selectedDecades}
-            onSelect={setSelectedDecades}
+          selectedItems={preferences.decades}
+          onSelect={handleDecades}
         />
+
         <MoodWidget
-            selectedItems={moodSettings}
-            onSelect={setMoodSettings}
+          selectedItems={preferences.mood}
+          onSelect={handleMood}
         />
 
         <PopularityWidget
-            selectedItems={popularityRange}
-            onSelect={setPopularityRange}
+          selectedItems={preferences.popularity}
+          onSelect={handlePopularity}
         />
+
+        {/* BOTÓN PARA GENERAR PLAYLIST */}
+        <button
+          onClick={handleGeneratePlaylist}
+          className="px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition text-xl font-semibold"
+        >
+          🎧 Generar Playlist
+        </button>
+
+        {/* LOADING */}
+        {loadingPlaylist && (
+          <p className="text-gray-300">Generando playlist...</p>
+        )}
+
+        {/* PLAYLIST RESULTANTE */}
+        {playlist.length > 0 && (
+          <PlaylistDisplay tracks={playlist} />
+        )}
 
       </div>
     </main>

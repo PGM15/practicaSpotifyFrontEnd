@@ -33,7 +33,7 @@ export default function ArtistWidget({ selectedItems, onSelect }) {
       try {
         const data = await searchArtists(debouncedQuery);
 
-        setResults(data.artists?.items || []);
+        setResults(data?.artists?.items || []);
       } catch (error) {
         console.error('Error buscando artistas:', error);
       }

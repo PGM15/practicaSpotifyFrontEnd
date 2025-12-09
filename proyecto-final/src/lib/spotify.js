@@ -1,6 +1,14 @@
 export function getAccessToken() {
-  return localStorage.getItem("access_token");
+  if (typeof window === "undefined") return null; // evita SSR crash
+  
+  const token = localStorage.getItem("access_token");
+
+  // Si el token no existe, intenta obtenerlo desde sessionStorage (a veces se guarda ahí en Next.js)
+  if (!token) return sessionStorage.getItem("access_token");
+
+  return token;
 }
+
 
 export async function searchArtists(query) {
   const token = getAccessToken();
