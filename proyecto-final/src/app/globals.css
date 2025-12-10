@@ -3,14 +3,10 @@
 /* 🎨 PALETA ESTILO SPOTIFY */
 :root {
   --bg-spotify: #0b0f14;
-  --bg-card: #111827;
-  --bg-card-hover: #1f2937;
   --text-primary: #e5e7eb;
-  --text-secondary: #9ca3af;
   --spotify-green: #1db954;
 }
 
-/* FONDO GENERAL */
 body {
   background: var(--bg-spotify);
   color: var(--text-primary);
@@ -19,54 +15,61 @@ body {
   overflow-x: hidden;
 }
 
-/* 🌌 FONDO PREMIUM ANIMADO */
+/* 🌌 FONDO PREMIUM QUE RELLENA LATERALES */
 .dashboard-bg {
   position: relative;
-  overflow: hidden;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0b0f14, #10231c, #0b0f14);
-  background-size: 220% 220%;
-  animation: bgShift 16s ease infinite;
+  width: 100%;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(circle at 15% 50%, #1db95422, transparent 70%),
+    radial-gradient(circle at 85% 50%, #1db95422, transparent 70%),
+    linear-gradient(135deg, #0b0f14, #10231c, #0b0f14);
+
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  /* Animación suave del fondo */
+  animation: bgShift 12s ease-in-out infinite alternate;
 }
 
 @keyframes bgShift {
   0%   { background-position: 0% 0%; }
-  50%  { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
 }
 
-/* ☄️ BURBUJAS LUMINOSAS */
+/* ☄️ BURBUJAS LUMINOSAS (luces suaves dinámicas) */
 .floating-bubble {
   position: absolute;
-  width: 500px;
-  height: 500px;
+  width: 420px;
+  height: 420px;
   background: #1db95433;
-  filter: blur(140px);
+  filter: blur(120px);
   border-radius: 50%;
   animation: floatPulse 18s ease-in-out infinite alternate;
 }
 
 @keyframes floatPulse {
-  0% { transform: translate(-150px, 40px) scale(1); }
-  100% { transform: translate(150px, -40px) scale(1.7); }
+  0% { transform: translate(-120px, 60px) scale(1); }
+  100% { transform: translate(120px, -60px) scale(1.6); }
 }
 
-/* 🎵 TARJETAS PREMIUM */
+/* TARJETAS PREMIUM */
 .spotify-card {
-  background: var(--bg-card);
+  background: #111827;
   padding: 1.6rem;
   border-radius: 1.2rem;
   box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-  transition: transform .25s ease, background .25s ease, box-shadow .25s ease;
+  transition: transform .25s ease, background .25s ease;
 }
 
 .spotify-card:hover {
-  background: var(--bg-card-hover);
+  background: #1f2937;
   transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 0 25px #1db95444;
 }
 
-/* ✨ ANIMACIONES */
+/* ANIMACIONES */
 .fade-in {
   opacity: 0;
   animation: fadeIn 0.9s ease forwards;
@@ -77,31 +80,16 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.slide-up {
-  opacity: 0;
-  animation: slideUp 1s ease forwards;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Inputs estilo Spotify */
+/* INPUTS TIPO SPOTIFY */
 .spotify-input {
   background: #1f2937;
   padding: 0.75rem 1rem;
   color: white;
   border-radius: 0.6rem;
   width: 100%;
-  border: none;
 }
 
-.spotify-input::placeholder {
-  color: #64748b;
-}
-
-/* Botón grande estilo Spotify */
+/* BOTÓN SPOTIFY PREMIUM */
 .btn-spotify {
   background: var(--spotify-green);
   padding: 1rem 1.6rem;
