@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* 🎨 PALETA ESTILO SPOTIFY */
+/* PALETA ESTILO SPOTIFY */
 :root {
   --bg-spotify: #0b0f14;
   --text-primary: #e5e7eb;
@@ -15,7 +15,7 @@ body {
   overflow-x: hidden;
 }
 
-/* 🌌 FONDO PREMIUM QUE RELLENA LATERALES */
+/* FONDO QUE RELLENA LATERALES */
 .dashboard-bg {
   position: relative;
   min-height: 100vh;
@@ -30,7 +30,7 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
 
-  /* Animación suave del fondo */
+  /* Animación del fondo */
   animation: bgShift 12s ease-in-out infinite alternate;
 }
 
@@ -39,7 +39,7 @@ body {
   100% { background-position: 100% 100%; }
 }
 
-/* ☄️ BURBUJAS LUMINOSAS (luces suaves dinámicas) */
+/* BURBUJAS (luces suaves dinámicas) */
 .floating-bubble {
   position: absolute;
   width: 420px;
@@ -55,7 +55,7 @@ body {
   100% { transform: translate(120px, -60px) scale(1.6); }
 }
 
-/* TARJETAS PREMIUM */
+/* TARJETAS */
 .spotify-card {
   background: #111827;
   padding: 1.6rem;
@@ -89,7 +89,7 @@ body {
   width: 100%;
 }
 
-/* BOTÓN SPOTIFY PREMIUM */
+/* BOTÓN SPOTIFY */
 .btn-spotify {
   background: var(--spotify-green);
   padding: 1rem 1.6rem;

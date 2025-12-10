@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#0d1117] text-white px-4">
 
-      {/* Fondo animado estilo porfolio */}
+      {/* Fondo animado */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#1a1f2e] via-[#0d1117] to-black opacity-90"></div>
       <div className="absolute -top-20 -left-20 w-72 h-72 bg-[#1DB954] opacity-20 blur-3xl rounded-full animate-pulse"></div>
       <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-[#1DB954] opacity-20 blur-3xl rounded-full animate-pulse delay-2000"></div>
