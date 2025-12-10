@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg-spotify: #0d1117;
+  --bg-card: #111827;
+  --bg-card-hover: #1f2937;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --spotify-green: #1db954;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-spotify);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
+  padding-bottom: 120px;
 }
+
+/* 🎵 Widgets estilo Spotify */
+.spotify-card {
+  background: var(--bg-card);
+  padding: 1.4rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.spotify-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+
+/* Inputs estilo Spotify */
+.spotify-input {
+  background: #1f2937;
+  padding: 0.7rem 1rem;
+  color: white;
+  border-radius: 0.6rem;
+  width: 100%;
+  outline: none;
+}
+
+.spotify-input::placeholder {
+  color: #64748b;
+}
+
+/* Botón tipo Spotify */
+.btn-spotify {
+  background: var(--spotify-green);
+  padding: 0.6rem 1rem;
+  font-weight: bold;
+  border-radius: 0.6rem;
+  color: black;
+  transition: opacity 0.2s ease;
+}
+
+.btn-spotify:hover {
+  opacity: 0.85;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 1.2s ease forwards;
+}
+

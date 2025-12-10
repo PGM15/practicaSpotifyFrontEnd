@@ -7,10 +7,8 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
 
-  // Añadir o quitar década
   const toggleDecade = (decade) => {
     const exists = selectedItems.includes(decade);
-
     if (exists) {
       onSelect(selectedItems.filter(d => d !== decade));
     } else {
@@ -18,7 +16,6 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
     }
   };
 
-  // Añadir rango personalizado
   const applyCustomRange = () => {
     if (!customStart || !customEnd) return;
 
@@ -27,7 +24,6 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
 
     if (isNaN(start) || isNaN(end) || start >= end) return;
 
-    // Añadimos el valor de rango como "1993-2001"
     const rangeValue = `${start}-${end}`;
 
     if (!selectedItems.includes(rangeValue)) {
@@ -60,16 +56,16 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
         })}
       </div>
 
-      {/* Rango de años personalizado */}
+      {/* Rango personalizado */}
       <h3 className="font-semibold mb-2">🎯 Rango de años personalizado</h3>
 
-      <div className="flex gap-2 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 w-full">
         <input
           type="number"
           placeholder="Inicio (ej: 1990)"
           value={customStart}
           onChange={(e) => setCustomStart(e.target.value)}
-          className="flex-1 p-2 rounded-lg bg-gray-700 text-white"
+          className="p-2 rounded-lg bg-gray-700 text-white w-full"
         />
 
         <input
@@ -77,7 +73,7 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
           placeholder="Fin (ej: 1999)"
           value={customEnd}
           onChange={(e) => setCustomEnd(e.target.value)}
-          className="flex-1 p-2 rounded-lg bg-gray-700 text-white"
+          className="p-2 rounded-lg bg-gray-700 text-white w-full"
         />
       </div>
 
@@ -88,7 +84,6 @@ export default function DecadeWidget({ selectedItems, onSelect }) {
         Añadir rango
       </button>
 
-      {/* Lista de seleccionados */}
       {selectedItems.length > 0 && (
         <div className="mt-4 text-sm text-gray-300">
           <p><strong>Seleccionado:</strong></p>
