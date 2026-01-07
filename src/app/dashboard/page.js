@@ -30,6 +30,7 @@ export default function Dashboard() {
 
   const [playlist, setPlaylist] = useState([]);
   const [loadingPlaylist, setLoadingPlaylist] = useState(false);
+  const [savingToSpotify, setSavingToSpotify] = useState(false);
 
   // handlers
   const handleArtists = items => setPreferences(prev => ({ ...prev, artists: items }));
@@ -45,53 +46,72 @@ export default function Dashboard() {
 
   const handleGeneratePlaylist = async () => {
     setLoadingPlaylist(true);
-
     try {
       const newTracks = await generatePlaylist(preferences);
       setPlaylist(newTracks);
     } catch (err) {
       console.error(err);
     }
-
     setLoadingPlaylist(false);
   };
 
   const handleRefreshPlaylist = async () => {
     setLoadingPlaylist(true);
-
     try {
       const freshTracks = await generatePlaylist(preferences);
       setPlaylist(freshTracks);
     } catch (err) {}
-
     setLoadingPlaylist(false);
   };
 
   const handleAddTracks = async () => {
     setLoadingPlaylist(true);
-
     try {
       const extraTracks = await generatePlaylist(preferences);
       const merged = [...playlist, ...extraTracks];
       const unique = Array.from(new Map(merged.map(t => [t.id, t])).values());
       setPlaylist(unique);
     } catch (err) {}
-
     setLoadingPlaylist(false);
   };
 
+  // 🟢 NUEVO: guardar playlist en Spotify
+  const handleSaveToSpotify = async () => {
+    const accessToken = localStorage.getItem('access_token');
+
+    if (!accessToken) {
+      alert('Debes iniciar sesión con Spotify');
+      return;
+    }
+
+    setSavingToSpotify(true);
+
+    try {
+      const res = await fetch('/api/create-playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Mi Taste Mixer Playlist 🎧',
+          tracks: playlist.map(track => track.uri),
+          accessToken,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      alert('✅ Playlist creada en tu Spotify');
+    } catch (err) {
+      alert('❌ Error creando la playlist');
+    }
+
+    setSavingToSpotify(false);
+  };
 
   return (
     <main className="min-h-screen p-6 sm:p-10 dashboard-bg relative">
 
-      {/* ☄️ Burbujas dinámicas */}
-      <div className="floating-bubble top-[-120px] left-[-120px]"></div>
-      <div className="floating-bubble bottom-[-150px] right-[-150px] delay-5000"></div>
-
-      {/* HEADER PREMIUM */}
+      {/* HEADER */}
       <header className="relative mb-14 fade-in">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1db95422] to-transparent blur-3xl"></div>
-
         <div className="relative flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-[#1f1f1f]">
           <h1 className="text-5xl font-extrabold tracking-tight flex items-center gap-3">
             <span className="text-[#1DB954] text-6xl animate-pulse">🎧</span>
@@ -107,48 +127,24 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* HERO TEXT */}
-      <div className="text-center mb-10 fade-in">
-        <h2 className="text-3xl mb-3 font-bold">Mezcla tus gustos musicales</h2>
-        <p className="text-gray-300 max-w-2xl mx-auto">
-          Selecciona artistas, géneros, épocas y moods. Genera playlists únicas y guárdalas directamente en tu cuenta de Spotify.
-        </p>
-      </div>
+      {/* GRID DE WIDGETS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
 
-      {/* GRID DE WIDGETS ANIMADO */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto fade-in">
+        <ArtistWidget selectedItems={preferences.artists} onSelect={handleArtists} />
+        <TrackWidget selectedItems={preferences.tracks} onSelect={handleTracks} genre={preferences.genres[0]} />
+        <GenreWidget selectedItems={preferences.genres} onSelect={handleGenres} />
+        <DecadeWidget selectedItems={preferences.decades} onSelect={handleDecades} />
+        <MoodWidget selectedItems={preferences.mood} onSelect={handleMood} />
+        <PopularityWidget selectedItems={preferences.popularity} onSelect={handlePopularity} />
 
-        <div className="spotify-card widget-card fade-in">
-          <ArtistWidget selectedItems={preferences.artists} onSelect={handleArtists} />
-        </div>
-
-        <div className="spotify-card widget-card fade-in">
-          <TrackWidget selectedItems={preferences.tracks} onSelect={handleTracks} genre={preferences.genres[0]} />
-        </div>
-
-        <div className="spotify-card widget-card fade-in">
-          <GenreWidget selectedItems={preferences.genres} onSelect={handleGenres} />
-        </div>
-
-        <div className="spotify-card widget-card fade-in">
-          <DecadeWidget selectedItems={preferences.decades} onSelect={handleDecades} />
-        </div>
-
-        <div className="spotify-card widget-card fade-in">
-          <MoodWidget selectedItems={preferences.mood} onSelect={handleMood} />
-        </div>
-
-        <div className="spotify-card widget-card fade-in">
-          <PopularityWidget selectedItems={preferences.popularity} onSelect={handlePopularity} />
-        </div>
       </div>
 
       {/* BOTONES */}
-      <div className="max-w-4xl mx-auto flex flex-col gap-6 mt-10 fade-in">
+      <div className="max-w-4xl mx-auto flex flex-col gap-6 mt-10">
 
         <button
           onClick={handleGeneratePlaylist}
-          className="btn-spotify w-full text-xl glow text-black"
+          className="btn-spotify w-full text-xl text-black"
         >
           🚀 Generar Playlist
         </button>
@@ -157,16 +153,25 @@ export default function Dashboard() {
           <>
             <button
               onClick={handleRefreshPlaylist}
-              className="px-6 py-3 text-xl bg-yellow-600 hover:bg-yellow-700 rounded-full shadow-lg hover:scale-105 transition-all w-full"
+              className="px-6 py-3 text-xl bg-yellow-600 hover:bg-yellow-700 rounded-full"
             >
               🔄 Refrescar Playlist
             </button>
 
             <button
               onClick={handleAddTracks}
-              className="px-6 py-3 text-xl bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg hover:scale-105 transition-all w-full"
+              className="px-6 py-3 text-xl bg-blue-600 hover:bg-blue-700 rounded-full"
             >
               ➕ Añadir Más Canciones
+            </button>
+
+            {/* 🟢 NUEVO BOTÓN */}
+            <button
+              onClick={handleSaveToSpotify}
+              disabled={savingToSpotify}
+              className="px-6 py-3 text-xl bg-green-500 hover:bg-green-600 rounded-full text-black font-bold"
+            >
+              {savingToSpotify ? '⏳ Guardando en Spotify...' : '💾 Guardar en mi Spotify'}
             </button>
           </>
         )}
@@ -176,9 +181,7 @@ export default function Dashboard() {
         )}
 
         {playlist.length > 0 && (
-          <div className="fade-in">
-            <PlaylistDisplay tracks={playlist} setPlaylist={setPlaylist} />
-          </div>
+          <PlaylistDisplay tracks={playlist} setPlaylist={setPlaylist} />
         )}
 
         <FavoritesList />

@@ -2,21 +2,40 @@ export async function POST(req) {
   try {
     const { name, tracks, accessToken } = await req.json();
 
+    // 1️⃣ Validaciones
     if (!accessToken) {
-      return new Response(JSON.stringify({ error: "Missing access token" }), {
-        status: 400,
-      });
+      return Response.json(
+        { error: "No access token" },
+        { status: 401 }
+      );
     }
 
-    // 1️⃣ Obtener el ID del usuario
+    if (!tracks || tracks.length === 0) {
+      return Response.json(
+        { error: "No tracks provided" },
+        { status: 400 }
+      );
+    }
+
+    // 2️⃣ Obtener usuario
     const userRes = await fetch("https://api.spotify.com/v1/me", {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
+
+    if (!userRes.ok) {
+      const err = await userRes.text();
+      return Response.json(
+        { error: err },
+        { status: userRes.status }
+      );
+    }
 
     const userData = await userRes.json();
 
-    // 2️⃣ Crear playlist
-    const createRes = await fetch(
+    // 3️⃣ Crear playlist
+    const playlistRes = await fetch(
       `https://api.spotify.com/v1/users/${userData.id}/playlists`,
       {
         method: "POST",
@@ -25,35 +44,55 @@ export async function POST(req) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          description: "Generada automáticamente con Spotify Taste Mixer 🎧",
+          name: name || "Mi Taste Mixer Playlist 🎧",
           public: true,
         }),
       }
     );
 
-    const playlist = await createRes.json();
+    if (!playlistRes.ok) {
+      const err = await playlistRes.text();
+      return Response.json(
+        { error: err },
+        { status: playlistRes.status }
+      );
+    }
 
-    // 3️⃣ Añadir canciones
-    const trackUris = tracks.map((t) => `spotify:track:${t.id}`);
+    const playlist = await playlistRes.json();
 
-    await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ uris: trackUris }),
-    });
+    // 4️⃣ Añadir canciones (URIs DIRECTAS)
+    const addTracksRes = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uris: tracks, 
+        }),
+      }
+    );
+
+    if (!addTracksRes.ok) {
+      const err = await addTracksRes.text();
+      return Response.json(
+        { error: err },
+        { status: addTracksRes.status }
+      );
+    }
 
     return Response.json({
+      success: true,
       url: playlist.external_urls.spotify,
-      id: playlist.id,
     });
+
   } catch (err) {
-    console.error("Error in create playlist:", err);
-    return new Response(JSON.stringify({ error: "Server error" }), {
-      status: 500,
-    });
+    console.error("CREATE PLAYLIST ERROR:", err);
+    return Response.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

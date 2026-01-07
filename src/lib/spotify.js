@@ -56,46 +56,71 @@ export async function searchTracksByGenre(genre) {
 
 
 export async function generatePlaylist(preferences) {
-  const { artists, genres, decades, popularity } = preferences;
-  const token = getAccessToken();
-  let allTracks = [];
+  const { artists, tracks, genres, decades, popularity } = preferences;
+  const token = await getAccessToken();
 
-  // 1. Top tracks por artista
-  for (const artist of artists) {
-    const tracks = await fetch(
+  let artistTracks = [];
+  let genreTracks = [];
+  let seedTracks = [];
+
+  // 1️⃣ TRACKS SELECCIONADOS (TrackWidget) – PRIORIDAD ALTA
+  for (const track of tracks.slice(0, 5)) {
+    const res = await fetch(
+      `https://api.spotify.com/v1/tracks/${track.id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const data = await res.json();
+    seedTracks.push(data);
+  }
+
+  // 2️⃣ Tracks por artista
+  for (const artist of artists.slice(0, 3)) {
+    const res = await fetch(
       `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`,
       {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
-    const data = await tracks.json();
-    allTracks.push(...data.tracks);
+
+    const data = await res.json();
+    artistTracks.push(...data.tracks.slice(0, 5));
   }
 
-  // 2. Buscar por género
-  for (const genre of genres) {
-    const results = await fetch(
-      `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
+  // 3️⃣ Tracks por género
+  for (const genre of genres.slice(0, 3)) {
+    const res = await fetch(
+      `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=15`,
       {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
-    const data = await results.json();
-    allTracks.push(...data.tracks.items);
+
+    const data = await res.json();
+    genreTracks.push(...data.tracks.items.slice(0, 5));
   }
 
-  // 3. Filtrar por década
+  // 4️⃣ Mezclar TODAS las fuentes
+  let allTracks = [
+    ...seedTracks,
+    ...artistTracks,
+    ...genreTracks,
+  ];
+
+  // 5️⃣ Filtrar por década
   if (decades.length > 0) {
     allTracks = allTracks.filter(track => {
       const year = new Date(track.album.release_date).getFullYear();
       return decades.some(decade => {
-        const decadeStart = parseInt(decade);
-        return year >= decadeStart && year < decadeStart + 10;
+        const start = parseInt(decade);
+        return year >= start && year < start + 10;
       });
     });
   }
 
-  // 4. Filtrar por popularidad
+  // 6️⃣ Filtrar por popularidad
   if (popularity) {
     const [min, max] = popularity;
     allTracks = allTracks.filter(
@@ -103,10 +128,14 @@ export async function generatePlaylist(preferences) {
     );
   }
 
-  // 5. Quitar duplicados y limitar
+  // 7️⃣ Quitar duplicados
   const uniqueTracks = Array.from(
     new Map(allTracks.map(track => [track.id, track])).values()
-  ).slice(0, 30);
+  );
 
-  return uniqueTracks;
+  // 8️⃣ Mezclar aleatoriamente
+  const shuffled = uniqueTracks.sort(() => 0.5 - Math.random());
+
+  // 9️⃣ Limitar resultado final
+  return shuffled.slice(0, 30);
 }
